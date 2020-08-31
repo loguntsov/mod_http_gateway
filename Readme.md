@@ -14,18 +14,28 @@ Domain what processes requests should be define in config. The example of config
 ```
 
 This config means:
+
 1. We are using subdomain for each host named as test. So if you have boorchat.ru host, then client should send requests to 'test.boorchat.ru'.
+
 2. This 'test.boorchat.ru' domain linked with http-domain (URL): 'https://ya.ru'
 
-Client must send request like this:
+Client must send requests like these:
 
+* SET request will be processed as POST http-request:
 ```
 <iq to="test.boorchat.ru" type="set" id="id"><query xmlns="urn:xmpp:http_gateway" url="/"><http type="json">hello</http></query></iq>
 ```
 
+* GET request will be processed as GET http-request:
+```
+<iq to="test.boorchat.ru" type="get" id="id"><query xmlns="urn:xmpp:http_gateway" url="/"></query></iq>
+```
+
+
 Types of IQ:
-    * set - will generate post request
-    * get - will generate get request. http tag will be ignored.
+
+* set - will generate post request   
+* get - will generate get request. http tag will be ignored.
     
 Url in query tag is continuous of URL. The full URL will be buit from start part from config and sent part from query.
 

@@ -88,8 +88,16 @@ route(Pkt = #iq{}) ->
   ejabberd_router:process_iq(Pkt);
 route(_Packet) -> ok.
 
+process_iq(#iq{ type = set, sub_els = [#http_gateway_request{ url = Url, body = [#http_gateway_body{} = Body]}]} = IQ) ->
+  process(IQ, set, Url, Body);
+process_iq(#iq{ type = get, sub_els = [#http_gateway_request{ url = Url, body = _}]} = IQ) ->
+  process(IQ, get, Url, undefined);
 
-process_iq(IQ = #iq{ sub_els = [#http_gateway_request{ url = Url, body = [#http_gateway_body{} = Body]}]}) ->
+process_iq(IQ) ->
+  ?INFO_MSG("IQ ~p", [ IQ ]),
+  xmpp:make_error(IQ, xmpp:err_bad_request()).
+
+process(IQ, Type, Url, Body) ->
   ?INFO_MSG("IQ ~p", [ IQ ]),
   To = xmpp:get_to(IQ),
   From = binary_to_list(jid:to_string(xmpp:get_from(IQ))),
@@ -97,13 +105,13 @@ process_iq(IQ = #iq{ sub_els = [#http_gateway_request{ url = Url, body = [#http_
     undefined -> xmpp:make_error(IQ, xmpp:err_item_not_found());
     { ok, Opts} ->
       Address = binary_to_list(iolist_to_binary([ maps:get(domain, Opts), Url ])),
-      Mime = case Body#http_gateway_body.type of
-        json -> "application/json";
-        text -> "text/plain";
-        binary -> "application/binary"
-      end,
       Result = case IQ#iq.type of
         set ->
+          Mime = case Body#http_gateway_body.type of
+            json -> "application/json";
+            text -> "text/plain";
+            binary -> "application/binary"
+          end,
           httpc:request(post, {Address, [{"from_jid", From}], Mime, Body#http_gateway_body.body
           }, [],[{ body_format, binary }]);
         get ->
@@ -111,21 +119,17 @@ process_iq(IQ = #iq{ sub_els = [#http_gateway_request{ url = Url, body = [#http_
       end,
       case Result of
         {ok, {{_,Status, _}, _Headers, ResponseBody}} ->
-          Type = json,
+          BodyType = json,
           Response = #http_gateway_response{
             status = integer_to_binary(Status),
             body = [#http_gateway_body{
-              type = Type,
+              type = BodyType,
               body = ResponseBody
             }]
           },
           xmpp:make_iq_result(IQ, Response)
       end
-  end;
-
-process_iq(IQ) ->
-  ?INFO_MSG("IQ ~p", [ IQ ]),
-  xmpp:make_error(IQ, xmpp:err_bad_request()).
+  end.
 
 %% INTERNAL
 
