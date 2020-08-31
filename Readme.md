@@ -31,6 +31,7 @@ Client must send requests like these:
 <iq to="test.boorchat.ru" type="get" id="id"><query xmlns="urn:xmpp:http_gateway" url="/"></query></iq>
 ```
 
+Module sends JID of requester in http-header ``from_jid``
 
 Types of IQ:
 
