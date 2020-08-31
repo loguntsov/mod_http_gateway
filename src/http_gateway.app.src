@@ -1,0 +1,12 @@
+{application, http_gateway, [
+  {description, "simple http gateway for fixed URN"},
+  {vsn, "0.1"},
+  {registered, []},
+  {applications, [
+    kernel,
+    stdlib,
+    inets
+  ]},
+  {mod, {http_gateway_app, []}},
+  {env, []}
+]}.

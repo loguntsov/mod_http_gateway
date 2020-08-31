@@ -1,0 +1,5 @@
+author: "Sergey Loguntsov <loguntsov@gmail.com>"
+category: "gateway"
+summary: "Converts IQ request to HTTP request and send result back as XMPP packet"
+home: ""
+url: ""
