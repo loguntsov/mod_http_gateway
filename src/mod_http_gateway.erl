@@ -40,7 +40,7 @@ start(Host, Opts) ->
     http_gateway_app:set_env({domain, DomainHost}, Opt),
     { DomainHost, Domain, Opt}
   end, maps:get(domains, Opts)),
-  http_gateway_app:set_env(domains, Domains),
+  http_gateway_app:set_env({domains, Host}, Domains),
   { ok, _ } = application:ensure_all_started(?APP),
   lists:foreach(fun({DomainHost, _Domain, Opt}) ->
     http_gateway_app:set_env({domain, DomainHost}, maps:from_list(Opt)),
@@ -51,10 +51,10 @@ start(Host, Opts) ->
   ok.
 
 stop(Host) ->
-  Domains = http_gateway_app:get_env(domains),
-  lists:foreach(fun({Domain, _DomainOpt}) ->
-    gen_iq_handler:remove_iq_handler(ejabberd_local, iolist_to_binary([Domain, <<".">>, Host]), ?NS_HTTP_GATEWAY)
-  end, maps:to_list(Domains)),
+  Domains = http_gateway_app:get_env({domains, Host}),
+  lists:foreach(fun({DomainHost, _Domain, _DomainOpt}) ->
+    gen_iq_handler:remove_iq_handler(ejabberd_local, DomainHost, ?NS_HTTP_GATEWAY)
+  end, Domains),
   xmpp:unregister_codec(?XMPP_CODEC),
   proc_lib:spawn(fun() ->
     ok = application:stop(?APP)
@@ -97,7 +97,7 @@ process_iq(IQ) ->
   ?INFO_MSG("IQ ~p", [ IQ ]),
   xmpp:make_error(IQ, xmpp:err_bad_request()).
 
-process(IQ, Type, Url, Body) ->
+process(IQ, _Type, Url, Body) ->
   ?INFO_MSG("IQ ~p", [ IQ ]),
   To = xmpp:get_to(IQ),
   From = binary_to_list(jid:to_string(xmpp:get_from(IQ))),
