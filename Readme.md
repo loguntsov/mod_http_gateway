@@ -104,4 +104,11 @@ Put folder with compiled beam files from (_build/default/lib/http_gateway) to fo
 apt install gcc libssl-dev libexpat1-dev libyaml-dev g++ zlib1g-dev
 ```
 
+# Author
+
+Sergey Loguntsov mailto: [loguntsov][gmail.com]
+
+# License
+
+MIT
 
